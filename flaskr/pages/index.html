@@ -8,15 +8,15 @@
 <body>
     <h1 id="display">Display some text</h1>
     <script>
-    
-    fetch("http://localhost:5000/shehryar")
+
+    fetch("http://localhost:5000/books")
     .then(function(response){
-        
+
         return response.json();
     })
     .then(function(jsonData){
         console.log(jsonData)
-        document.getElementById('display').innerHTML = jsonData[0].venues[1].name;
+        document.getElementById('display').innerHTML = jsonData
     })
     
     </script>

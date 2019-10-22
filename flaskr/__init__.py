@@ -1,71 +1,153 @@
-from flask import Flask, jsonify, render_template, request, Response, redirect, abort
-from .models import setup_db, Plant
+from flask import Flask, request, abort, jsonify
+from flask_sqlalchemy import SQLAlchemy #, or_
 from flask_cors import CORS
+import random
 
-def create_app(test_config=None):
-    app = Flask(__name__, template_folder='pages')
+from .models import setup_db, Book
+
+BOOKS_PER_SHELF = 8
+
+
+def create_app(test_config=None, template_folder='pages'):
+
+  # create and configure the app
+    app = Flask(__name__)
     setup_db(app)
     CORS(app)
 
+    def paginate_books(request, selection):
+        page = request.args.get('page', 1, type=int)
+        start =  (page - 1) * BOOKS_PER_SHELF
+        end = start + BOOKS_PER_SHELF
 
+        books = [book.format() for book in selection]
+        current_books = books[start:end]
+
+        return current_books
+
+  # CORS Headers 
     @app.after_request
     def after_request(response):
-        response.headers.add('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-        response.headers.add('Access-Control-Allow-Methods', 'GET, POST, PATCH, DELETE, OPTIONS')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization,true')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
         return response
 
+  
+    @app.route('/books')
+    def retrieve_books():
+        selection = Book.query.order_by(Book.id).all()
+        current_books = paginate_books(request, selection)
 
-    @app.route('/shehryar')
-    def index():
-        return jsonify([{"city": "Lahore",
-        "state": "Punjab",
-        "venues": [{
-            "id": 1,
-            "name": "The Musical Hop",
-            "num_upcoming_shows": 0},
-            {
-                "id": 2,
-                "name": "Gaddafi Stadium",
-                "num_upcoming_shows": 1
-            }]
-        }])
-
-    @app.route('/api')
-    def api_route():
-        return render_template('index.html')
-
-    
-    @app.route('/plants', methods=['GET','POST'])
-    def get_plants():
-        page = request.args.get('page', 1, type=int)
-        print(page)
-        start = (page - 1) * 10
-        print(start)
-        end = start + 5
-        print(end)
-        plants = Plant.query.all()
-        formatted_plants = [plant.format() for plant in plants]
-
-
-        return jsonify({
-            'success': True,
-            'plants': formatted_plants[start:end],
-            'total_plants': len(formatted_plants) 
-        })
-    
-    @app.route('/plants/<int:plant_id>')
-    def get_specific_plant(plant_id):
-        plant = Plant.query.filter(Plant.id == plant_id).one_or_none()
-
-        if plant is None:
+        if len(current_books) == 0:
             abort(404)
 
-        else:
+        return jsonify({
+        'success': True,
+        'books': current_books,
+        'total_books': len(Book.query.all())
+        })
+
+    @app.route('/books/<int:book_id>', methods=['PATCH'])
+    def update_book(book_id):
+
+        body = request.get_json()
+
+        try:
+            book = Book.query.filter(Book.id == book_id).one_or_none()
+            if book is None:
+                abort(404)
+            if 'rating' in body:
+                book.rating = int(body.get('rating'))
+            book.update()
 
             return jsonify({
                 'success': True,
-                'plant': plant.format()
+            })
+        
+        except:
+            abort(400)
+
+    @app.route('/books/<int:book_id>', methods=['DELETE'])
+    def delete_book(book_id):
+        try:
+            book = Book.query.filter(Book.id == book_id).one_or_none()
+
+            if book is None:
+                abort(404)
+
+            book.delete()
+            selection = Book.query.order_by(Book.id).all()
+            current_books = paginate_books(request, selection)
+
+            return jsonify({
+                'success': True,
+                'deleted': book_id,
+                'books': current_books,
+                'total_books': len(Book.query.all())
             })
 
+        except:
+            abort(422)
+
+    @app.route('/books/<int:book_id>')
+    def get_book(book_id):
+        book_query = Book.query.filter(Book.id == book_id).all()
+
+        current_book = [book.format() for book in book_query]
+
+        return jsonify({
+            'success': True,
+            'books': current_book,
+            'total_books': len(Book.query.all())
+        })
+
+    @app.route('/books', methods=['POST'])
+    def create_book():
+        body = request.get_json()
+
+        new_title = body.get('title', None)
+        new_author = body.get('author', None)
+        new_rating = body.get('rating', None)
+
+        try:
+            book = Book(title=new_title, author=new_author, rating=new_rating)
+            book.insert()
+
+            selection = Book.query.order_by(Book.id).all()
+            current_books = paginate_books(request, selection)
+
+            return jsonify({
+                'success': True,
+                'created': book.id,
+                'books': current_books,
+                'total_books': len(Book.query.all())
+            })
+
+        except:
+            abort(422)
+
+    @app.errorhandler(404)
+    def not_found(error):
+        return jsonify({
+            "success": False,
+            "error": 404,
+            "Message": "resource not found"
+        })
+
+    @app.errorhandler(422)
+    def cannot_process(error):
+        return jsonify({
+            "success": False,
+            "error": error,
+            "message": "unable to process request"
+        })
+
+    @app.errorhandler(400)
+    def cannot_connect(error):
+        return jsonify({
+            "success": False,
+            "error": error,
+            "message": "cannot connect to server"
+        })
 
     return app

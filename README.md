@@ -4,9 +4,7 @@ Flask application using Flask CORS and building API endpoints
 Flaskr
 ======
 
-The basic blog app built in the Flask `tutorial`_.
-
-.. _tutorial: http://flask.pocoo.org/docs/tutorial/
+A basic book app built in the Flask framework
 
 
 Install
@@ -17,12 +15,11 @@ you're reading.** You probably want the latest tagged version, but the
 default Git version is the master branch. ::
 
     # clone the repository
-    $ git clone https://github.com/pallets/flask
-    $ cd flask
+    $ git clone https://github.com/shehryarbajwa/flask_application
+    $ cd flask_application
+    $ cd flask_application (twice)
+    # cd backend
     # checkout the correct version
-    $ git tag  # shows the tagged versions
-    $ git checkout latest-tag-found-above
-    $ cd examples/tutorial
 
 Create a virtualenv and activate it::
 

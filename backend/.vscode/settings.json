@@ -1,3 +1,5 @@
 {
-    "python.pythonPath": "/Users/shehryarbajwa/flask_application/flask_application/flaskr/venv/bin/python3"
+    "python.pythonPath": "/Users/shehryarbajwa/flask_application/flask_application/flaskr/venv/bin/python3",
+    "python.linting.pylintEnabled": true,
+    "python.linting.enabled": true
 }

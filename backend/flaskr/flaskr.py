@@ -54,6 +54,10 @@ def create_app(test_config=None):
         current_book = Book.query.filter(Book.id == book_id).all()
         book_format = [book.format() for book in current_book]
 
+        if len(current_book) > book_id:
+            print(len(current_book))
+            abort(404)
+
         return jsonify({
             'success': True,
             'book': book_format

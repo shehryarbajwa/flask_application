@@ -100,6 +100,26 @@ class BookCaseTest(unittest.TestCase):
         self.assertTrue(len(data['books']))
         self.assertEqual(book, None)
 
+    def test_get_book_search_with_results(self):
+        res = self.client().post('/books', json={'search': 'Novel'})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['total_books'])
+        self.assertEqual(len(data['books']), 4)
+
+    def test_get_book_search_without_results(self):
+        res = self.client().post('/books', json={'search': 'Applejack'})
+        data = json.loads(res.data)
+
+        self.assertEqual(res.status_code, 200)
+        self.assertEqual(data['success'], True)
+        self.assertTrue(data['total_books'])
+        self.assertEqual(len(data['books']), 4)
+
+
+
 
     
 

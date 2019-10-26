@@ -116,19 +116,28 @@ def create_app(test_config=None):
         new_rating = body.get('rating', None)
 
         try:
-            book = Book(title=new_title, author=new_author, rating=new_rating)
-            book.insert()
+            if search:
+                selection = Book.query.order_by(Book.id).filter(Book.title.ilike('%{}%'.format(search)))
+                current_books = paginate_books(request, selection)
 
-            selection = Book.query.order_by(Book.id).all()
-            current_books = paginate_books(request, selection)
-            import pdb; pdb.set_trace()
+                return jsonify({
+                    'success': True,
+                    'created': book.id,
+                    'books': current_books,
+                    'total_books': len(Book.query.all())
+                })
+            else:
+                book = Book(title=new_title, author=new_author, rating=new_rating)
+                book.insert()
 
-            return jsonify({
-                'success': True,
-                'created': book.id,
-                'books': current_books,
-                'total_books': len(Book.query.all())
-            })
+                selection = Book.query.order_by(Book.id).all()
+                current_books = paginate_books(request, selection)
+
+                return jsonify({
+                    'success': True,
+                    'books': current_books,
+                    'total_books': len(Book.query.all())
+                })
 
         except:
             abort(422)

@@ -66,10 +66,12 @@ class BookCaseTest(unittest.TestCase):
 
     def test_update_book_rating(self):
         res = self.client().patch('/books/1', json=
+        
         {
             'author': 'Nasim Taleb',
             'title': 'Antifragile',
-            'rating': 1}
+            'rating': 1
+        }
         )
         data = json.loads(res.data)
         book = Book.query.filter(Book.id == 1).one_or_none()
